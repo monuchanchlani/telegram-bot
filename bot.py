@@ -1,17 +1,32 @@
 from telegram import Update
 from telegram.ext import Application, CommandHandler, CallbackContext
 
+# ✅ Replace with your Telegram User IDs
+ALLOWED_USERS = [6202472342]  # Add your ID here
+
 # Initialize balances and history
 balances = {"monu": 0, "md": 0}
 adjustments = {"md_extra_withdrawn": 0}
 history = []
 
+# 🔒 Access Control
+async def is_authorized(update: Update):
+    user_id = update.message.from_user.id
+    if user_id not in ALLOWED_USERS:
+        await update.message.reply_text("🚫 Access Denied: You are not authorized to use this bot.")
+        return False
+    return True
+
 # Start command
 async def start(update: Update, context: CallbackContext):
+    if not await is_authorized(update):
+        return
     await update.message.reply_text("Welcome to the Profit Maintain Bot! How can I help you today?")
 
 # Add profit command
 async def add_profit(update: Update, context: CallbackContext):
+    if not await is_authorized(update):
+        return
     try:
         profit = int(context.args[0])
         share = profit // 2
@@ -32,6 +47,8 @@ async def add_profit(update: Update, context: CallbackContext):
 
 # Add payment command
 async def add_payment(update: Update, context: CallbackContext):
+    if not await is_authorized(update):
+        return
     try:
         payment = int(context.args[0])
 
@@ -51,6 +68,8 @@ async def add_payment(update: Update, context: CallbackContext):
 
 # Calculate balance command
 async def calculate_balance(update: Update, context: CallbackContext):
+    if not await is_authorized(update):
+        return
     adjustment_message = (
         f"MD owes Monu: ₹{adjustments['md_extra_withdrawn']}\n"
         if adjustments["md_extra_withdrawn"] > 0 else "No adjustments pending."
@@ -62,6 +81,8 @@ async def calculate_balance(update: Update, context: CallbackContext):
 
 # Show history command
 async def show_history(update: Update, context: CallbackContext):
+    if not await is_authorized(update):
+        return
     if history:
         await update.message.reply_text("\n".join(history))
     else:
