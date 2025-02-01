@@ -1,3 +1,4 @@
+import time
 from telegram import Update
 from telegram.ext import Application, CommandHandler, CallbackContext
 
@@ -36,14 +37,14 @@ async def add_profit(update: Update, context: CallbackContext):
         balances["md"] += share
 
         # Log history
-        history.append(f"Profit added: ₹{profit} (₹{share} each)")
+        history.append(f"✅ Profit added: ₹{profit} (₹{share} each)")
         await update.message.reply_text(
-            f"Profit of ₹{profit} added.\n"
+            f"✅ Profit of ₹{profit} added.\n"
             f"Each partner's share: ₹{share}\n"
-            f"Current Balances:\nMonu: ₹{balances['monu']}\nMD: ₹{balances['md']}"
+            f"💰 Current Balances:\n👉 Monu: ₹{balances['monu']}\n👉 MD: ₹{balances['md']}"
         )
     except:
-        await update.message.reply_text("Error: Use the command like this - /addprofit [amount]")
+        await update.message.reply_text("❌ Error: Use the command like this - /addprofit [amount]")
 
 # Add payment command
 async def add_payment(update: Update, context: CallbackContext):
@@ -57,26 +58,26 @@ async def add_payment(update: Update, context: CallbackContext):
         adjustments["md_extra_withdrawn"] += payment
 
         # Log history
-        history.append(f"MD transferred ₹{payment} to Monu.")
+        history.append(f"🔄 MD transferred ₹{payment} to Monu.")
         await update.message.reply_text(
-            f"MD transferred ₹{payment} to Monu.\n"
-            f"Current Balances:\nMonu: ₹{balances['monu']}\n"
-            f"MD owes Monu: ₹{adjustments['md_extra_withdrawn']}"
+            f"🔄 MD transferred ₹{payment} to Monu.\n"
+            f"💰 Current Balances:\n👉 Monu: ₹{balances['monu']}\n"
+            f"📌 MD needs to pay Monu: ₹{adjustments['md_extra_withdrawn']}"
         )
     except:
-        await update.message.reply_text("Error: Use the command like this - /addpayment [amount]")
+        await update.message.reply_text("❌ Error: Use the command like this - /addpayment [amount]")
 
 # Calculate balance command
 async def calculate_balance(update: Update, context: CallbackContext):
     if not await is_authorized(update):
         return
     adjustment_message = (
-        f"MD owes Monu: ₹{adjustments['md_extra_withdrawn']}\n"
-        if adjustments["md_extra_withdrawn"] > 0 else "No adjustments pending."
+        f"📌 MD needs to pay Monu: ₹{adjustments['md_extra_withdrawn']}\n"
+        if adjustments["md_extra_withdrawn"] > 0 else "✅ No pending payments."
     )
     await update.message.reply_text(
-        f"Current Balances:\nMonu: ₹{balances['monu']}\n"
-        f"MD: ₹{balances['md']}\n{adjustment_message}"
+        f"💰 Current Balances:\n👉 Monu: ₹{balances['monu']}\n"
+        f"👉 MD: ₹{balances['md']}\n{adjustment_message}"
     )
 
 # Show history command
@@ -84,25 +85,31 @@ async def show_history(update: Update, context: CallbackContext):
     if not await is_authorized(update):
         return
     if history:
-        await update.message.reply_text("\n".join(history))
+        await update.message.reply_text("📜 Transaction History:\n" + "\n".join(history))
     else:
-        await update.message.reply_text("No transactions yet.")
+        await update.message.reply_text("📝 No transactions yet.")
 
-# Main function
-def main():
-    bot_token = "7583172405:AAGDad81jomlRIIDuYmh8TBmQF5s5cAyG70"  # Replace with your actual bot token
-    app = Application.builder().token(bot_token).build()
+# Function to auto-restart bot
+def run_bot():
+    while True:
+        try:
+            bot_token = "7583172405:AAGDad81jomlRIIDuYmh8TBmQF5s5cAyG70"  # Replace with your actual bot token
+            app = Application.builder().token(bot_token).build()
 
-    # Add command handlers
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("addprofit", add_profit))
-    app.add_handler(CommandHandler("addpayment", add_payment))
-    app.add_handler(CommandHandler("calculatebalance", calculate_balance))
-    app.add_handler(CommandHandler("history", show_history))
+            # Add command handlers
+            app.add_handler(CommandHandler("start", start))
+            app.add_handler(CommandHandler("addprofit", add_profit))
+            app.add_handler(CommandHandler("addpayment", add_payment))
+            app.add_handler(CommandHandler("calculatebalance", calculate_balance))
+            app.add_handler(CommandHandler("history", show_history))
 
-    # Start the bot
-    print("Bot is running...")
-    app.run_polling()
+            print("🚀 Bot is running...")
+            app.run_polling()
+
+        except Exception as e:
+            print(f"❌ Error: {e}")
+            print("🔄 Restarting bot in 5 seconds...")
+            time.sleep(5)  # Wait 5 seconds before restarting
 
 if __name__ == "__main__":
-    main()
+    run_bot()
